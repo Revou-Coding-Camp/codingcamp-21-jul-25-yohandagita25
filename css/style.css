@@ -298,18 +298,39 @@ body {
     margin-bottom: 1rem; /* mb-4 */
 }
 
-.sort-info {
+.sort-button { /* New style for the sort button */
+    background-color: #e5e7eb; /* bg-gray-200 */
+    color: #374151; /* text-gray-700 */
+    padding: 0.5rem 1rem; /* p-2 px-4 */
+    border-radius: 0.5rem; /* rounded-lg */
+    transition: background-color 0.2s ease-in-out;
+    outline: none; /* focus:outline-none */
     display: flex;
     align-items: center;
-    color: #4b5563; /* text-gray-600 */
-    font-weight: 600; /* font-semibold */
+    justify-content: center;
+    border: none; /* Remove default button border */
+    cursor: pointer;
 }
+
+.sort-button:hover:not(:disabled) { /* Only hover if not disabled */
+    background-color: #d1d5db; /* hover:bg-gray-300 */
+}
+
+.sort-button:focus {
+    box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.5); /* focus:ring-2 focus:ring-gray-400 */
+}
+
+.sort-button.disabled-button { /* Style for disabled sort button */
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #f3f4f6; /* Lighter background for disabled */
+    color: #9ca3af; /* Lighter text for disabled */
+}
+
 
 .sort-icon {
     margin-right: 0.5rem; /* mr-2 */
 }
-
-/* The info icon was removed, so no specific style needed for it anymore */
 
 .delete-all-button {
     background-color: #ef4444; /* bg-red-500 */
@@ -337,7 +358,7 @@ body {
 
 /* Task List Table */
 .table-container {
-    overflow-x: auto; /* overflow-x-scroll */
+    overflow-x: auto;
 }
 
 .task-table {
@@ -423,7 +444,14 @@ body {
     background-color: #bfdbfe; /* hover:bg-blue-200 */
 }
 
-/* The orange edit button was removed, so no specific style needed for it anymore */
+.action-button.orange-button { /* Style for the new edit button */
+    background-color: #ffedd5; /* bg-orange-100 */
+    color: #ea580c; /* text-orange-600 */
+}
+
+.action-button.orange-button:hover { /* Hover style for the new edit button */
+    background-color: #fed7aa; /* hover:bg-orange-200 */
+}
 
 .action-button.red-button {
     background-color: #fee2e2; /* bg-red-100 */
