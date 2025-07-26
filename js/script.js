@@ -12,7 +12,7 @@ const pendingTasksValue = document.getElementById('pending-tasks-value');
 const progressValue = document.getElementById('progress-value');
 const deleteAllButton = document.getElementById('delete-all-button');
 const searchInput = document.getElementById('search-input');
-const sortInfo = document.querySelector('.sort-button'); // Get the sort info div
+const sortButton = document.getElementById('sort-button');
 
 // Array to store tasks
 let tasks = [];
@@ -21,7 +21,10 @@ let tasks = [];
 let currentSortCriterion = 'none'; // 'name', 'dueDate', 'status'
 let sortDirection = 'asc'; // 'asc' for ascending, 'desc' for descending
 
-// Function to update statistics
+// Variable to store the ID of the task being edited
+let editingTaskId = null;
+
+// Function to update statistics and button states
 function updateStatistics() {
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(task => task.status === 'Selesai').length;
@@ -32,6 +35,15 @@ function updateStatistics() {
     completedTasksValue.textContent = completedTasks;
     pendingTasksValue.textContent = pendingTasks;
     progressValue.textContent = `${progress}%`;
+
+    // Disable sort button if no tasks
+    if (totalTasks === 0) {
+        sortButton.disabled = true;
+        sortButton.classList.add('disabled-button'); // Add a class for disabled styling
+    } else {
+        sortButton.disabled = false;
+        sortButton.classList.remove('disabled-button'); // Remove disabled styling
+    }
 }
 
 // Function to show message (success or error)
@@ -121,6 +133,9 @@ function renderTasks(tasksToRender = tasks) {
                     <button class="action-button blue-button" data-id="${task.id}" onclick="toggleTaskStatus(this.dataset.id)">
                         <i class="fas ${task.status === 'Selesai' ? 'fa-undo' : 'fa-check'}"></i>
                     </button>
+                    <button class="action-button orange-button" data-id="${task.id}" onclick="editTask(this.dataset.id)">
+                        <i class="fas fa-pen"></i>
+                    </button>
                     <button class="action-button red-button" data-id="${task.id}" onclick="deleteTask(this.dataset.id)">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -129,10 +144,20 @@ function renderTasks(tasksToRender = tasks) {
         `;
         taskTableBody.appendChild(row);
     });
-    updateStatistics(); // Statistics always reflect the main 'tasks' array
+    updateStatistics(); // Statistics and button states always reflect the main 'tasks' array
 }
 
-// Function to add a new task
+// Set the minimum date for the date input to today
+document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayFormatted = `${year}-${month}-${day}`;
+    document.getElementById('date-input').setAttribute('min', todayFormatted);
+});
+
+// Function to add a new task or update an existing task
 addButton.addEventListener('click', () => {
     const taskName = taskInput.value.trim();
     const dueDate = dateInput.value;
@@ -143,17 +168,29 @@ addButton.addEventListener('click', () => {
         return;
     }
 
-    const newTask = {
-        id: crypto.randomUUID(), // Assign a unique ID to each task
-        name: taskName,
-        dueDate: dueDate,
-        status: 'Menunggu' // Default status
-    };
+    if (editingTaskId) {
+        // Update existing task
+        const taskIndex = tasks.findIndex(task => task.id === editingTaskId);
+        if (taskIndex !== -1) {
+            tasks[taskIndex].name = taskName;
+            tasks[taskIndex].dueDate = dueDate;
+            showMessage('Tugas berhasil diperbarui!', 'success');
+        }
+        editingTaskId = null; // Reset editing state
+        addButton.innerHTML = '<i class="fas fa-plus add-icon"></i> Tambah'; // Change button back to "Tambah"
+    } else {
+        // Add new task
+        const newTask = {
+            id: crypto.randomUUID(), // Assign a unique ID to each task
+            name: taskName,
+            dueDate: dueDate,
+            status: 'Menunggu' // Default status
+        };
+        tasks.push(newTask);
+        showMessage('Tugas berhasil ditambahkan!', 'success');
+    }
 
-    tasks.push(newTask);
     renderTasks(); // Re-render the table
-    showMessage('Tugas berhasil ditambahkan!', 'success');
-
     // Clear inputs
     taskInput.value = '';
     dateInput.value = '';
@@ -182,6 +219,18 @@ function deleteTask(taskId) {
     }
 }
 
+// Function to edit a task
+function editTask(taskId) {
+    const taskToEdit = tasks.find(task => task.id === taskId);
+    if (taskToEdit) {
+        taskInput.value = taskToEdit.name;
+        dateInput.value = taskToEdit.dueDate;
+        editingTaskId = taskId; // Set the ID of the task being edited
+        addButton.innerHTML = '<i class="fas fa-save add-icon"></i> Perbarui'; // Change button text and icon
+        showMessage('Mode Edit: Perbarui tugas di atas', 'info'); // Optional: show info message
+    }
+}
+
 // Function to delete all tasks
 deleteAllButton.addEventListener('click', () => {
     if (tasks.length === 0) {
@@ -206,8 +255,14 @@ searchInput.addEventListener('keyup', () => {
     renderTasks(filteredTasks); // Render only the filtered tasks
 });
 
-// Basic sorting interaction (for demonstration)
-sortInfo.addEventListener('click', () => {
+// Sort button interaction
+sortButton.addEventListener('click', () => {
+    // Check if the button is disabled (no tasks)
+    if (sortButton.disabled) {
+        showMessage('Tidak ada tugas untuk diurutkan!', 'error');
+        return;
+    }
+
     // Cycle through sort criteria: none -> name -> dueDate -> status -> none
     if (currentSortCriterion === 'none') {
         currentSortCriterion = 'name';
